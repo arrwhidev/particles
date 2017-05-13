@@ -1,0 +1,13 @@
+{
+  "name": "particles",
+  "version": "1.0.0",
+  "license": "MIT",
+  "dependencies": {
+    "webpack": "^2.5.1",
+    "webpack-dev-server": "^2.4.5"
+  },
+  "scripts": {
+    "build": "webpack",
+    "start": "webpack-dev-server --open"
+  }
+}
