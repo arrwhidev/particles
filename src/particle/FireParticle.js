@@ -19,7 +19,7 @@ class FireParticle extends Particle {
     }
 
     render(ctx) {
-        const canvas2 = document.getElementById('canvas2');
+        const canvas2 = document.getElementById('fire_particle');
         const ctx2 = canvas2.getContext("2d");
 
         const renderWidth = this.size * this.scale;

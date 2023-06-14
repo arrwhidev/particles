@@ -21,5 +21,8 @@ module.exports = {
     },
     isPointInCircle: function(p, c, r) {
         return (Math.pow(p.x - c.x, 2) + Math.pow(p.y - c.y, 2)) < Math.pow(r, 2);
+    },
+    oscilateSine: function(min, max, frequency, time) {
+        return (max - min) / 2 * Math.sin(2 * Math.PI * frequency * time) + (max + min) / 2;
     }
 }

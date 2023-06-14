@@ -2,19 +2,20 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <title>Particles</title>
+        <title>Particles Demo</title>
         <style media="screen">
-            body,html {
+            body, html {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
                 margin: 0;
-                padding: 0;
-                width: 100%;
-                height: 100%;
+                background-color: black;
             }
             #canvas {
-                display: block;
-                background-color: white;
+                margin: auto auto;
             }
-            #canvas2 {
+            #fire_particle {
                 display: none;
             }
         </style>
@@ -22,7 +23,10 @@
     </head>
     <body>
         <canvas id="canvas"></canvas>
-        <canvas id="canvas2"></canvas>
+        <canvas id="fire_particle"></canvas>
         <script src="/bundle.js" charset="utf-8"></script>
+        <script>
+            window.startParticlesDemo(window.innerWidth * 0.8, window.innerHeight * 0.8);
+        </script>
     </body>
 </html>

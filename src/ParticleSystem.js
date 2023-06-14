@@ -5,6 +5,7 @@ class ParticleSystem {
         this.bgColour = 'rgba(0,0,0,1)';
         this.blendingMode = 'source-over';
         this.clear();
+
     }
 
     clear() {

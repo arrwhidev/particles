@@ -1,5 +1,5 @@
 class Game {
-    constructor(tickCallback, onClickCallback) {
+    constructor(tickCallback, width, height) {
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext("2d");
 
@@ -7,13 +7,10 @@ class Game {
         this.canvas = canvas;
         this.ctx = ctx;
         this.cb = tickCallback;
-
-        this.updateCanvasSize();
-    }
-
-    updateCanvasSize() {
-        this.canvas.width = window.innerWidth;
-        this.canvas.height = window.innerHeight;
+        this.width = width;
+        this.height = height;
+        this.canvas.width = width;
+        this.canvas.height = height;
     }
 
     tick(timestamp) {

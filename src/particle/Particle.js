@@ -43,9 +43,9 @@ class Particle {
     }
 
     checkIfOOB() {
-        if (this.position.x > window.innerWidth ||
+        if (this.position.x > window.innerWidth || // TODO: use canvas width instead of window
             this.position.x < 0 ||
-            this.position.y > window.innerHeight ||
+            this.position.y > window.innerHeight || // TODO: use canvas height instead of window
             this.position < 0) {
             this.life = -1;
         }

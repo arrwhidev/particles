@@ -1,21 +1,22 @@
 const { Vector, MathHelper }  = require('../math');
 const { LifeColourParticle, Particle } = require('../particle');
+const { dataset } = require('../texture/Texture');
 
 class Emitter {
-    constructor(position, velocity, spread, rate, max, life, startColour, endColour, size) {
+    constructor(position, velocity, spread, rate, max, life, startColour, endColour, size, rotation) {
         this.position = position;
         this.velocity = velocity;
         this.spread = spread || 0;
         this.rate = rate || 2;
         this.max = max || 1000;
-        this.life = life || 60;
+        this.life = life || 350;
         this.startColour = startColour || [0, 230, 230, 1];
         this.endColour = endColour || [230, 30, 100, 1];
-        this.size = size || 3.5;
+        this.size = size || 2;
         this.radius = 3;
         this.particles = [];
         this.edges = [];
-        this.rotation = 0;
+        this.rotation = rotation || 0;
     }
 
     maybeEmit() {
@@ -36,14 +37,14 @@ class Emitter {
             velocity,
             null,
             this.size,
-            this.life,
+            this.life * (Math.random() * (1.5 - 1.0) + 1.0), // randomize the life of each particle
             this.startColour,
             this.endColour
         )
     }
 
     update(dt, particleSystem) {
-        this.updateRotation();
+        this.updateRotation(dt);
         this.maybeEmit();
         this.particles = this.particles
             .map(p => p.update(dt, particleSystem))

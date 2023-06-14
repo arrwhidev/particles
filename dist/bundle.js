@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 9);
+/******/ 	return __webpack_require__(__webpack_require__.s = 11);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -71,8 +71,8 @@
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = {
-    Vector: __webpack_require__(16),
-    MathHelper: __webpack_require__(15)
+    Vector: __webpack_require__(18),
+    MathHelper: __webpack_require__(17)
 };
 
 
@@ -82,22 +82,23 @@ module.exports = {
 
 const { Vector, MathHelper }  = __webpack_require__(0);
 const { LifeColourParticle, Particle } = __webpack_require__(3);
+const { dataset } = __webpack_require__(7);
 
 class Emitter {
-    constructor(position, velocity, spread, rate, max, life, startColour, endColour, size) {
+    constructor(position, velocity, spread, rate, max, life, startColour, endColour, size, rotation) {
         this.position = position;
         this.velocity = velocity;
         this.spread = spread || 0;
         this.rate = rate || 2;
         this.max = max || 1000;
-        this.life = life || 60;
+        this.life = life || 350;
         this.startColour = startColour || [0, 230, 230, 1];
         this.endColour = endColour || [230, 30, 100, 1];
-        this.size = size || 3.5;
+        this.size = size || 2;
         this.radius = 3;
         this.particles = [];
         this.edges = [];
-        this.rotation = 0;
+        this.rotation = rotation || 0;
     }
 
     maybeEmit() {
@@ -118,14 +119,14 @@ class Emitter {
             velocity,
             null,
             this.size,
-            this.life,
+            this.life * (Math.random() * (1.5 - 1.0) + 1.0), // randomize the life of each particle
             this.startColour,
             this.endColour
         )
     }
 
     update(dt, particleSystem) {
-        this.updateRotation();
+        this.updateRotation(dt);
         this.maybeEmit();
         this.particles = this.particles
             .map(p => p.update(dt, particleSystem))
@@ -237,9 +238,9 @@ class Particle {
     }
 
     checkIfOOB() {
-        if (this.position.x > window.innerWidth ||
+        if (this.position.x > window.innerWidth || // TODO: use canvas width instead of window
             this.position.x < 0 ||
-            this.position.y > window.innerHeight ||
+            this.position.y > window.innerHeight || // TODO: use canvas height instead of window
             this.position < 0) {
             this.life = -1;
         }
@@ -263,9 +264,9 @@ module.exports = Particle;
 
 module.exports = {
     Particle: __webpack_require__(2),
-    FireParticle: __webpack_require__(17),
-    LifeColourParticle: __webpack_require__(18),
-    VelocityColourParticle: __webpack_require__(19)
+    FireParticle: __webpack_require__(19),
+    LifeColourParticle: __webpack_require__(20),
+    VelocityColourParticle: __webpack_require__(21)
 };
 
 
@@ -273,29 +274,213 @@ module.exports = {
 /* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = {
-    Emitter: __webpack_require__(1),
-    FireEmitter: __webpack_require__(11),
-    VelocityColourEmitter: __webpack_require__(13),
-    RainbowEmitter: __webpack_require__(12)
-};
+const { Field } = __webpack_require__(6);
+const { Emitter, FireEmitter } = __webpack_require__(5);
+const { Vector } = __webpack_require__(0);
 
+module.exports = function(particleSystem, width, height) {
+    const midX = width / 2;
+    const midY = height / 2;
+    const midVector = new Vector(midX, midY)
+
+    function fourCorners() {
+        // top left.
+        const pos1 = new Vector(width * 0.25, height * 0.25)
+        let r = Math.atan2(midX - pos1.x, midY - pos1.y)
+        particleSystem.addEmitter(new Emitter(
+            pos1,
+            new Vector().fromAngle(Math.PI, 2),
+            Math.PI / 4,
+            4,
+            2000,
+            350,
+            null,
+            null,
+            2,
+            r
+        ));
+
+        // bottom right
+        const pos2 = new Vector(width * 0.75, height * 0.75);
+        r = Math.atan2(midX - pos2.x, midY - pos2.y)
+        particleSystem.addEmitter(new Emitter(
+            pos2,
+            new Vector().fromAngle(Math.PI, 2),
+            Math.PI / 4,
+            4,
+            2000,
+            350,
+            null,
+            null,
+            2,
+            r
+        ));
+
+        // top right
+        const pos3 = new Vector(width * 0.25, height * 0.75);
+        r = Math.atan2(pos3.x - midX, pos3.y - midY)
+        particleSystem.addEmitter(new Emitter(
+            pos3,
+            new Vector().fromAngle(Math.PI, 2),
+            Math.PI / 4,
+            4,
+            2000,
+            350,
+            null,
+            null,
+            2,
+            r
+        ));
+
+        // top right
+        const pos4 = new Vector(width * 0.75, height * 0.25)
+        r = Math.atan2(pos4.x - midX, pos4.y - midY)
+        particleSystem.addEmitter(new Emitter(
+            pos4,
+            new Vector().fromAngle(Math.PI, 2),
+            Math.PI / 4,
+            4,
+            2000,
+            350,
+            null,
+            null,
+            2,
+            r
+        ));
+    }
+
+    return {
+        loop: function() {
+            particleSystem.clear();
+            particleSystem.addEmitter(
+                new Emitter(
+                    new Vector(midX, height * 0.25),
+                    new Vector().fromAngle(Math.PI , 2),
+                    Math.PI / 4,
+                    4,
+                    2000,
+                    350,
+                    null,
+                    null,
+                    2,
+                ));
+                
+            particleSystem.addField(
+                new Field(
+                    new Vector(midX, height * 0.7), 
+                    2300
+                ));
+        },
+        fastPulse: function () {
+            particleSystem.clear();
+            fourCorners();
+            
+
+            particleSystem.addField(new Field(new Vector(midX, midY), -300, {
+                minMass: -700,
+                maxMass: 40,
+                oscilateFrequency: 0.5,
+            }))
+        },
+        slowPulse: function () {
+            particleSystem.clear();
+            fourCorners();
+            
+            // top middle
+            particleSystem.addEmitter(new Emitter(
+                new Vector(width / 2, height * 0.15),
+                new Vector().fromAngle(Math.PI, 2),
+                Math.PI / 4,
+                4,
+                2000,
+                350,
+                null,
+                null,
+                2,
+                Math.PI / 2
+            ));
+
+            // bottom middle
+            particleSystem.addEmitter(new Emitter(
+                new Vector(width / 2, height * 0.85),
+                new Vector().fromAngle(Math.PI, 2),
+                Math.PI / 4,
+                4,
+                2000,
+                350,
+                null,
+                null,
+                2,
+                Math.PI + (Math.PI / 2)
+            ));
+            particleSystem.addField(new Field(new Vector(midX, midY), -300, {
+                minMass: -3000,
+                maxMass: -80,
+                oscilateFrequency: 0.05,
+            }))
+        },
+        fire: function() {
+            particleSystem.clear();
+            particleSystem.addEmitter(new FireEmitter(new Vector(midX, midY)))
+            particleSystem.addField(new Field(new Vector(midX - 50, midY - 50), -100))
+            particleSystem.addField(new Field(new Vector(midX + 50, midY - 50), -100))
+        },
+        bigCircle: function() {
+            particleSystem.clear();
+            particleSystem.addEmitter(
+                 new Emitter(
+                     new Vector(midX, midY),
+                     new Vector().fromAngle(Math.PI, 2),
+                     Math.PI,
+                     2,
+                     1000,
+                     100 * 60,
+                     undefined,
+                     undefined,
+                     2)
+            );
+            particleSystem.addField(new Field(new Vector(midX - 150, midY), 6000))
+            particleSystem.addField(new Field(new Vector(midX - 50, midY), -1500))
+        },
+    }
+}
 
 /***/ }),
 /* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = {
-    Field: __webpack_require__(14)
+    Emitter: __webpack_require__(1),
+    FireEmitter: __webpack_require__(13),
+    VelocityColourEmitter: __webpack_require__(15),
+    RainbowEmitter: __webpack_require__(14),
 };
 
 
 /***/ }),
 /* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = {
+    Field: __webpack_require__(16)
+};
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports) {
+
+const texture = new Image(32, 32);
+texture.src = 'particle.png';
+module.exports = texture;
+
+
+/***/ }),
+/* 8 */
 /***/ (function(module, exports) {
 
 class Game {
-    constructor(tickCallback, onClickCallback) {
+    constructor(tickCallback, width, height) {
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext("2d");
 
@@ -303,13 +488,10 @@ class Game {
         this.canvas = canvas;
         this.ctx = ctx;
         this.cb = tickCallback;
-
-        this.updateCanvasSize();
-    }
-
-    updateCanvasSize() {
-        this.canvas.width = window.innerWidth;
-        this.canvas.height = window.innerHeight;
+        this.width = width;
+        this.height = height;
+        this.canvas.width = width;
+        this.canvas.height = height;
     }
 
     tick(timestamp) {
@@ -328,7 +510,7 @@ module.exports = Game;
 
 
 /***/ }),
-/* 7 */
+/* 9 */
 /***/ (function(module, exports) {
 
 class ParticleSystem {
@@ -338,6 +520,7 @@ class ParticleSystem {
         this.bgColour = 'rgba(0,0,0,1)';
         this.blendingMode = 'source-over';
         this.clear();
+
     }
 
     clear() {
@@ -375,11 +558,11 @@ module.exports = ParticleSystem;
 
 
 /***/ }),
-/* 8 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const { MathHelper, Vector }  = __webpack_require__(0);
-const configureMainGUIControls = __webpack_require__(10);
+const configureMainGUIControls = __webpack_require__(12);
 
 function openActiveFieldGui(item) {
     if (window.activeItemGui) {
@@ -388,7 +571,11 @@ function openActiveFieldGui(item) {
 
     window.activeItemGui = new dat.GUI();
     window.activeItemGui.add(item.constructor, 'name')
-    window.activeItemGui.add(item, 'mass', -10000, 10000);
+    window.activeItemGui.add(item, 'mass', -20000, 10000).listen();
+    window.activeItemGui.add(item, 'oscilateMass')
+    window.activeItemGui.add(item, 'oscilateFrequency')
+    window.activeItemGui.add(item, 'minMass')
+    window.activeItemGui.add(item, 'maxMass')
 }
 
 function openActiveEmitterGui(item) {
@@ -407,12 +594,23 @@ function openActiveEmitterGui(item) {
     window.activeItemGui.add(item, 'life', 60, 60 * 100);
     window.activeItemGui.add(item, 'rotation', 0, Math.PI * 2)
 }
+
 module.exports = function(particleSystem, canvas) {
-    configureMainGUIControls(particleSystem);
+    function getCanvasRelativeCoords(evt) {
+        const rect = canvas.getBoundingClientRect();
+        const x = evt.x - rect.left;
+        const y = evt.y - rect.top;
+        return { x, y };
+    }
+
+    configureMainGUIControls(particleSystem, canvas.width, canvas.height);
+    
     canvas.addEventListener('mousedown', function(evt) {
+        const relativeEvt = getCanvasRelativeCoords(evt);
+
         for (let i = 0; i < particleSystem.fields.length; i++) {
             const field = particleSystem.fields[i];
-            if (MathHelper.isPointInCircle(evt, field.position, field.radius)) {
+            if (MathHelper.isPointInCircle(relativeEvt, field.position, field.radius)) {
                 window.activeItem = field;
                 openActiveFieldGui(field);
                 break;
@@ -421,7 +619,7 @@ module.exports = function(particleSystem, canvas) {
 
         for (let i = 0; i < particleSystem.emitters.length; i++) {
             const emitter = particleSystem.emitters[i];
-            if (MathHelper.isPointInCircle(evt, emitter.position, emitter.radius)) {
+            if (MathHelper.isPointInCircle(relativeEvt, emitter.position, emitter.radius)) {
                 window.activeItem = emitter;
                 openActiveEmitterGui(emitter);
                 break;
@@ -432,93 +630,59 @@ module.exports = function(particleSystem, canvas) {
         window.activeItem = undefined;
     }, false);
     canvas.addEventListener('mousemove', function(evt) {
+        const relativeEvt = getCanvasRelativeCoords(evt);
         if (window.activeItem !== undefined) {
-            window.activeItem.position = new Vector(evt.x, evt.y)
+            window.activeItem.position = new Vector(relativeEvt.x, relativeEvt.y)
         }
     }, false);
 }
 
 
 /***/ }),
-/* 9 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
-const Game = __webpack_require__(6);
-const ParticleSystem = __webpack_require__(7);
-const configureGUI = __webpack_require__(8);
-const { Vector }  = __webpack_require__(0);
-const { Field } = __webpack_require__(5);
-const {
-    Emitter,
-    FireEmitter,
-} = __webpack_require__ (4)
+const Game = __webpack_require__(8);
+const ParticleSystem = __webpack_require__(9);
+const configureGUI = __webpack_require__(10);
+const createExamples = __webpack_require__(4)
 
-// Create main particle system container.
-const particleSystem = new ParticleSystem();
+window.startParticlesDemo = function(width, height) {
+    // Create main particle system container.
+    const particleSystem = new ParticleSystem();
 
-// Create main game.
-const game = new Game((dt, ctx) => {
-    particleSystem.update(dt);
-    particleSystem.render(ctx);
-});
-window.addEventListener('resize', game.updateCanvasSize, false);
-configureGUI(particleSystem, game.canvas);
-game.start();
+    // Create main game.
+    const game = new Game((dt, ctx) => {
+        particleSystem.update(dt);
+        particleSystem.render(ctx);
+    }, width, height);
+    game.start();
 
-/**
- * These are the emitters & fields that load by Default.
- */
+    window.particlesDemo = {
+        width,
+        height,
+    }
 
-const midX = game.canvas.width / 2;
-const midY = game.canvas.height / 2;
-
-particleSystem.addEmitter(
-    new Emitter(
-        new Vector(midX / 2, midY),
-        new Vector(2, 2),
-        Math.PI
-    )
-)
-particleSystem.addEmitter(
-    new Emitter(
-        new Vector(midX + midX / 2, midY),
-        new Vector(2, 2),
-        Math.PI
-    )
-)
-particleSystem.addEmitter(
-    new Emitter(
-        new Vector(midX, midY + midY / 2 + 100),
-        new Vector(2, 2),
-        Math.PI
-    )
-)
-particleSystem.addEmitter(
-    new Emitter(
-        new Vector(midX, 100),
-        new Vector().fromAngle(Math.PI, 2),
-        Math.PI / 4,
-        4,
-        1000,
-        2 * 60
-    )
-)
-particleSystem.addField(new Field(new Vector(midX, 325), 4500))
-particleSystem.addField(new Field(new Vector(midX, midY + midY / 2), -500))
-
+    // Set up gui and demo.
+    configureGUI(particleSystem, game.canvas);
+    createExamples(particleSystem, width, height).loop();
+}
 
 /***/ }),
-/* 10 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
-const { Field } = __webpack_require__(5);
-const { Emitter, FireEmitter } = __webpack_require__(4);
+const { Field } = __webpack_require__(6);
+const { Emitter } = __webpack_require__(5);
 const { Vector } = __webpack_require__(0);
+const createExamples = __webpack_require__(4);
 
-module.exports = function(particleSystem) {
-    const midX = window.innerWidth / 2;
-    const midY = window.innerHeight / 2;
-    const controller = {
+module.exports = function(particleSystem, width, height) {
+    const midX = width / 2;
+    const midY = height / 2;
+
+    const examples = createExamples(particleSystem, width, height);
+    const simpleControls = {
         createField: function() {
             const mass = 100;
             particleSystem.addField(new Field(new Vector(midX, 100), mass))
@@ -528,46 +692,35 @@ module.exports = function(particleSystem) {
                 new Emitter(new Vector(midX, 100), new Vector().fromAngle(Math.PI, 2), Math.PI / 4, 4, 1000, 2 * 60)
             )
         },
-        fireExample: function() {
-            particleSystem.clear();
-            particleSystem.addEmitter(new FireEmitter(new Vector(midX, midY)))
-            particleSystem.addField(new Field(new Vector(midX - 50, midY - 50), -100))
-            particleSystem.addField(new Field(new Vector(midX + 50, midY - 50), -100))
-        },
-        bigForceExample: function() {
-            particleSystem.clear();
-            particleSystem.addEmitter(
-                 new Emitter(
-                     new Vector(midX, midY),
-                     new Vector().fromAngle(Math.PI, 2),
-                     Math.PI,
-                     2,
-                     1000,
-                     100 * 60,
-                     undefined,
-                     undefined,
-                     2)
-            );
-            particleSystem.addField(new Field(new Vector(midX - 150, midY), 6000))
-            particleSystem.addField(new Field(new Vector(midX - 50, midY), -1500))
-        }
     }
 
     const gui = new dat.GUI();
-    gui.addColor(particleSystem, 'bgColour')
-    gui.add(particleSystem, 'blendingMode', ['source-over', 'lighten'])
-    gui.add(particleSystem, 'enableEdges')
-    gui.add(particleSystem, 'edgeThreshold', 0, 100)
-    gui.add(particleSystem, 'clear')
-    gui.add(controller, 'createField')
-    gui.add(controller, 'createEmitter')
-    gui.add(controller, 'fireExample')
-    gui.add(controller, 'bigForceExample')
+
+    const configFolder = gui.addFolder('Config');
+    configFolder.addColor(particleSystem, 'bgColour')
+    configFolder.add(particleSystem, 'enableEdges')
+    configFolder.add(particleSystem, 'edgeThreshold', 0, 100)
+
+    const controlsFolder = gui.addFolder('Controls');
+    controlsFolder.add(particleSystem, 'clear',)
+    controlsFolder.add(simpleControls, 'createField')
+    controlsFolder.add(simpleControls, 'createEmitter')
+    
+    const examplesFolder = gui.addFolder('Examples');
+    examplesFolder.add(examples, 'loop')
+    examplesFolder.add(examples, 'slowPulse')
+    examplesFolder.add(examples, 'fastPulse')
+    examplesFolder.add(examples, 'fire')
+    examplesFolder.add(examples, 'bigCircle')
+    
+    // Add to main gui.
+    // gui.addFolder(configFolder);
+    // gui.addFolder(examplesFolder);
+    // gui.addFolder(controlsFolder);
 }
 
-
 /***/ }),
-/* 11 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const Emitter = __webpack_require__(1);
@@ -598,7 +751,7 @@ module.exports = FireEmitter;
 
 
 /***/ }),
-/* 12 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const Emitter = __webpack_require__(1);
@@ -624,7 +777,7 @@ module.exports = RainbowEmitter;
 
 
 /***/ }),
-/* 13 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const Emitter = __webpack_require__(1);
@@ -652,21 +805,38 @@ module.exports = VelocityColourEmitter;
 
 
 /***/ }),
-/* 14 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
-const { Vector }  = __webpack_require__(0);
+const { Vector, MathHelper }  = __webpack_require__(0);
 const POS_MASS_COLOUR = '#02a8f3';
 const NEG_MASS_COLOUR = '#f34235';
 
 class Field {
-    constructor(position, mass) {
+    constructor(position, mass, oscilate = false) {
         this.position = position || new Vector(0, 0);
         this.mass = mass || 100;
         this.radius = 5;
+        this.age = 0;
+        if (oscilate) {
+            this.oscilateMass = true;
+            this.minMass = oscilate.minMass;
+            this.maxMass = oscilate.maxMass;
+            this.oscilateFrequency = oscilate.oscilateFrequency;
+        } else {
+            this.oscilateMass = false;
+            this.minMass = -500;
+            this.maxMass = 20;
+            this.oscilateFrequency = 0.01;
+        }
     }
 
-    update(dt) {}
+    update(dt) {
+        this.age += dt;
+        if (this.oscilateMass) {
+            this.mass = MathHelper.oscilateSine(this.minMass, this.maxMass, this.oscilateFrequency, this.age)
+        }
+    }
 
     render(ctx) {
         ctx.fillStyle = this.mass > 0 ? POS_MASS_COLOUR : NEG_MASS_COLOUR;
@@ -680,7 +850,7 @@ module.exports = Field;
 
 
 /***/ }),
-/* 15 */
+/* 17 */
 /***/ (function(module, exports) {
 
 module.exports = {
@@ -706,12 +876,15 @@ module.exports = {
     },
     isPointInCircle: function(p, c, r) {
         return (Math.pow(p.x - c.x, 2) + Math.pow(p.y - c.y, 2)) < Math.pow(r, 2);
+    },
+    oscilateSine: function(min, max, frequency, time) {
+        return (max - min) / 2 * Math.sin(2 * Math.PI * frequency * time) + (max + min) / 2;
     }
 }
 
 
 /***/ }),
-/* 16 */
+/* 18 */
 /***/ (function(module, exports) {
 
 class Vector {
@@ -764,11 +937,11 @@ module.exports = Vector;
 
 
 /***/ }),
-/* 17 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const Particle = __webpack_require__(2);
-const { Texture } = __webpack_require__(21);
+const { Texture } = __webpack_require__(22);
 
 /**
  * Fire like particle using a texture.
@@ -788,7 +961,7 @@ class FireParticle extends Particle {
     }
 
     render(ctx) {
-        const canvas2 = document.getElementById('canvas2');
+        const canvas2 = document.getElementById('fire_particle');
         const ctx2 = canvas2.getContext("2d");
 
         const renderWidth = this.size * this.scale;
@@ -818,7 +991,7 @@ module.exports = FireParticle;
 
 
 /***/ }),
-/* 18 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const Particle = __webpack_require__(2);
@@ -859,7 +1032,7 @@ module.exports = LifeColourParticle;
 
 
 /***/ }),
-/* 19 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const Particle = __webpack_require__(2);
@@ -890,20 +1063,11 @@ module.exports = VelocityColourParticle;
 
 
 /***/ }),
-/* 20 */
-/***/ (function(module, exports) {
-
-const texture = new Image(32, 32);
-texture.src = 'particle.png';
-module.exports = texture;
-
-
-/***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = {
-    Texture: __webpack_require__(20)
+    Texture: __webpack_require__(7)
 };
 
 
